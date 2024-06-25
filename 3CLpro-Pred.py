@@ -50,7 +50,11 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 
 # loading the saved models
 def load_pkl_with_reformat(filename):
-    with open(filename, 'rb') as f:
+    # Get the current directory of the script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(current_dir, filename)
+
+    with open(full_path, 'rb') as f:
         obj = pickle.load(f)
         # Define the expected dtype with all its specifications
         expected_dtype = np.dtype({
@@ -68,8 +72,8 @@ def load_pkl_with_reformat(filename):
             return new_obj
 
 # Load the pickle files using the custom function
-substructure_data = load_pkl_with_reformat('substructure.pkl')
-descriptors_data = load_pkl_with_reformat('descriptors.pkl')
+substructure_data = load_pkl_with_reformat('./substructure.pkl')
+descriptors_data = load_pkl_with_reformat('./descriptors.pkl')
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
