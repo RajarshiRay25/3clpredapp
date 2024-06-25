@@ -21,8 +21,23 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 
 
 # loading the saved models
-bioactivity_first_model = pickle.load(open('substructure.pkl', 'rb'))
-bioactivity_second_model = pickle.load(open('descriptors.pkl', 'rb'))
+try:
+    bioactivity_first_model = pickle.load(open('substructure.pkl', 'rb'))
+except ValueError as e:
+    st.error(f'Error loading substructure.pkl: {e}')
+except FileNotFoundError:
+    st.error('substructure.pkl file not found.')
+except Exception as e:
+    st.error(f'Error loading substructure.pkl: {e}')
+
+try:
+    bioactivity_second_model = pickle.load(open('descriptors.pkl', 'rb'))
+except ValueError as e:
+    st.error(f'Error loading descriptors.pkl: {e}')
+except FileNotFoundError:
+    st.error('descriptors.pkl file not found.')
+except Exception as e:
+    st.error(f'Error loading descriptors.pkl: {e}')
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
