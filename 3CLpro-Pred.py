@@ -63,8 +63,9 @@ def load_pkl_with_reformat(filename):
         # Check if the dtype of the node array matches the expected dtype
         if isinstance(obj, np.ndarray) and obj.dtype.names == expected_dtype.names:
             if obj.dtype != expected_dtype:
-                # Reformat the dtype if necessary
-                new_obj = obj.astype(expected_dtype)
+                # Create a new dtype with redundant values to match the actual dtype
+                new_dtype = np.dtype([(name, dtype) for name, dtype in zip(expected_dtype.names, obj.dtype)])
+                new_obj = obj.astype(new_dtype)
                 return new_obj
             else:
                 return obj
