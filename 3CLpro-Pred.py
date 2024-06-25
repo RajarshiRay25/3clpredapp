@@ -7,7 +7,6 @@
 
 import streamlit as st
 import pandas as pd
-import numpy as np
 from PIL import Image
 import subprocess
 import os
@@ -21,70 +20,24 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 
 
 
-# class CustomUnpickler(pickle.Unpickler):
-#     def find_class(self, module, name):
-#         if name == "Tree":
-#             from sklearn.tree._tree import Tree
-#             return Tree
-#         return super().find_class(module, name)
+# loading the saved models
+try:
+    bioactivity_first_model = pickle.load(open('substructure.pkl', 'rb'))
+except ValueError as e:
+    st.error(f'Error loading substructure.pkl: {e}')
+except FileNotFoundError:
+    st.error('substructure.pkl file not found.')
+except Exception as e:
+    st.error(f'Error loading substructure.pkl: {e}')
 
-# def load_model_with_fix(filename):
-#     with open(filename, 'rb') as f:
-#         unpickler = CustomUnpickler(f)
-#         obj = unpickler.load()
-        
-#         # Patch the tree structure if needed
-#         if isinstance(obj, DecisionTreeClassifier):
-#             tree = obj.tree_
-#             dtype = tree.__getstate__()['nodes'].dtype
-#             if 'missing_go_to_left' not in dtype.names:
-#                 new_dtype = np.dtype(dtype.descr + [('missing_go_to_left', 'u1')])
-#                 new_nodes = np.zeros(tree.node_count, dtype=new_dtype)
-#                 for name in dtype.names:
-#                     new_nodes[name] = tree.__getstate__()['nodes'][name]
-#                 tree.__setstate__({'nodes': new_nodes, 'values': tree.__getstate__()['values']})
-#         return obj
-
-# bioactivity_first_model = load_model_with_fix('substructure.pkl')
-# bioactivity_second_model = load_model_with_fix('descriptors.pkl')
-
-def load_pkl_with_reformat(filename):
-    # Get the current directory of the script
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    full_path = os.path.join(current_dir, filename)
-
-    with open(full_path, 'rb') as f:
-        obj = pickle.load(f)
-        # Check if the loaded object is a NumPy array or can be converted to one
-        if isinstance(obj, np.ndarray):
-            # Define the expected dtype with all its specifications
-            expected_dtype = np.dtype({
-                'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
-                'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
-                'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
-                'itemsize': 64
-            })
-            # Check if the dtype of the loaded object matches the expected dtype
-            if obj.dtype == expected_dtype:
-                return obj
-            else:
-                # If dtype doesn't match, reformat the dtype
-                new_obj = np.array(obj, dtype=expected_dtype)
-                return new_obj
-        else:
-            # If the loaded object is not a NumPy array, handle the error gracefully
-            print(f"Error: Loaded object is of type {type(obj)}, expected NumPy array.")
-            return None
-
-# Load the pickle files using the custom function
-substructure_data = load_pkl_with_reformat('substructure.pkl')
-descriptors_data = load_pkl_with_reformat('descriptors.pkl')
-
-if substructure_data is not None and descriptors_data is not None:
-    # Now you can use substructure_data and descriptors_data in your code
-    print("Pickle files loaded successfully.")
-else:
-    print("Error loading pickle files. Check the console for details.")
+try:
+    bioactivity_second_model = pickle.load(open('descriptors.pkl', 'rb'))
+except ValueError as e:
+    st.error(f'Error loading descriptors.pkl: {e}')
+except FileNotFoundError:
+    st.error('descriptors.pkl file not found.')
+except Exception as e:
+    st.error(f'Error loading descriptors.pkl: {e}')
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
