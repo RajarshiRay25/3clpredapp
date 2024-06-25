@@ -7,6 +7,7 @@
 
 import streamlit as st
 import pandas as pd
+import numpy as np
 from PIL import Image
 import subprocess
 import os
@@ -20,24 +21,32 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 
 
 
-# loading the saved models
-try:
-    bioactivity_first_model = pickle.load(open('substructure.pkl', 'rb'))
-except ValueError as e:
-    st.error(f'Error loading substructure.pkl: {e}')
-except FileNotFoundError:
-    st.error('substructure.pkl file not found.')
-except Exception as e:
-    st.error(f'Error loading substructure.pkl: {e}')
+class CustomUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if name == "Tree":
+            from sklearn.tree._tree import Tree
+            return Tree
+        return super().find_class(module, name)
 
-try:
-    bioactivity_second_model = pickle.load(open('descriptors.pkl', 'rb'))
-except ValueError as e:
-    st.error(f'Error loading descriptors.pkl: {e}')
-except FileNotFoundError:
-    st.error('descriptors.pkl file not found.')
-except Exception as e:
-    st.error(f'Error loading descriptors.pkl: {e}')
+def load_model_with_fix(filename):
+    with open(filename, 'rb') as f:
+        unpickler = CustomUnpickler(f)
+        obj = unpickler.load()
+        
+        # Patch the tree structure if needed
+        if isinstance(obj, DecisionTreeClassifier):
+            tree = obj.tree_
+            dtype = tree.__getstate__()['nodes'].dtype
+            if 'missing_go_to_left' not in dtype.names:
+                new_dtype = np.dtype(dtype.descr + [('missing_go_to_left', 'u1')])
+                new_nodes = np.zeros(tree.node_count, dtype=new_dtype)
+                for name in dtype.names:
+                    new_nodes[name] = tree.__getstate__()['nodes'][name]
+                tree.__setstate__({'nodes': new_nodes, 'values': tree.__getstate__()['values']})
+        return obj
+
+bioactivity_first_model = load_model_with_fix('substructure.pkl')
+bioactivity_second_model = load_model_with_fix('descriptors.pkl')
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
