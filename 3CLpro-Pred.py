@@ -55,24 +55,36 @@ def load_pkl_with_reformat(filename):
 
     with open(full_path, 'rb') as f:
         obj = pickle.load(f)
-        # Define the expected dtype with all its specifications
-        expected_dtype = np.dtype({
-            'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
-            'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
-            'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
-            'itemsize': 64
-        })
-        # Check if the dtype of the loaded object matches the expected dtype
-        if isinstance(obj, np.ndarray) and obj.dtype == expected_dtype:
-            return obj
+        # Check if the loaded object is a NumPy array or can be converted to one
+        if isinstance(obj, np.ndarray):
+            # Define the expected dtype with all its specifications
+            expected_dtype = np.dtype({
+                'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
+                'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
+                'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
+                'itemsize': 64
+            })
+            # Check if the dtype of the loaded object matches the expected dtype
+            if obj.dtype == expected_dtype:
+                return obj
+            else:
+                # If dtype doesn't match, reformat the dtype
+                new_obj = np.array(obj, dtype=expected_dtype)
+                return new_obj
         else:
-            # If dtype doesn't match, reformat the dtype
-            new_obj = np.array(obj, dtype=expected_dtype)
-            return new_obj
+            # If the loaded object is not a NumPy array, handle the error gracefully
+            print(f"Error: Loaded object is of type {type(obj)}, expected NumPy array.")
+            return None
 
 # Load the pickle files using the custom function
 substructure_data = load_pkl_with_reformat('substructure.pkl')
 descriptors_data = load_pkl_with_reformat('descriptors.pkl')
+
+if substructure_data is not None and descriptors_data is not None:
+    # Now you can use substructure_data and descriptors_data in your code
+    print("Pickle files loaded successfully.")
+else:
+    print("Error loading pickle files. Check the console for details.")
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
