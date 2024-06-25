@@ -49,27 +49,23 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 # bioactivity_second_model = load_model_with_fix('descriptors.pkl')
 
 # loading the saved models
-# Define the expected dtype for the node array
-expected_dtype = np.dtype({
-    'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
-    'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
-    'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
-    'itemsize': 64
-})
-
 def load_pkl_with_reformat(filename):
     with open(filename, 'rb') as f:
         obj = pickle.load(f)
-        # Check if the dtype of the node array matches the expected dtype
-        if isinstance(obj, np.ndarray) and obj.dtype.names == expected_dtype.names:
-            if obj.dtype != expected_dtype:
-                # Create a new dtype with redundant values to match the actual dtype
-                new_dtype = np.dtype([(name, dtype) for name, dtype in zip(expected_dtype.names, obj.dtype)])
-                new_obj = obj.astype(new_dtype)
-                return new_obj
-            else:
-                return obj
-        return obj
+        # Define the expected dtype with all its specifications
+        expected_dtype = np.dtype({
+            'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
+            'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
+            'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
+            'itemsize': 64
+        })
+        # Check if the dtype of the loaded object matches the expected dtype
+        if isinstance(obj, np.ndarray) and obj.dtype == expected_dtype:
+            return obj
+        else:
+            # If dtype doesn't match, reformat the dtype
+            new_obj = obj.astype(expected_dtype)
+            return new_obj
 
 # Load the pickle files using the custom function
 substructure_data = load_pkl_with_reformat('substructure.pkl')
