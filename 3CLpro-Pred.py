@@ -49,23 +49,26 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 # bioactivity_second_model = load_model_with_fix('descriptors.pkl')
 
 # loading the saved models
-try:
-    bioactivity_first_model = pickle.load(open('substructure.pkl', 'rb'))
-except ValueError as e:
-    st.error(f'Error loading substructure.pkl: {e}')
-except FileNotFoundError:
-    st.error('substructure.pkl file not found.')
-except Exception as e:
-    st.error(f'Error loading substructure.pkl: {e}')
+# Define the expected dtype for the node array
+expected_dtype = np.dtype({
+    'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
+    'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
+    'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
+    'itemsize': 64
+})
 
-try:
-    bioactivity_second_model = pickle.load(open('descriptors.pkl', 'rb'))
-except ValueError as e:
-    st.error(f'Error loading descriptors.pkl: {e}')
-except FileNotFoundError:
-    st.error('descriptors.pkl file not found.')
-except Exception as e:
-    st.error(f'Error loading descriptors.pkl: {e}')
+def load_pkl_with_reformat(filename):
+    with open(filename, 'rb') as f:
+        obj = pickle.load(f)
+        # Check if the dtype of the node array matches the expected dtype
+        if isinstance(obj, np.ndarray) and obj.dtype != expected_dtype:
+            # If dtype doesn't match, reformat the array dtype
+            obj = obj.astype(expected_dtype)
+        return obj
+
+# Load the pickle files using the custom function
+substructure_data = load_pkl_with_reformat('substructure.pkl')
+descriptors_data = load_pkl_with_reformat('descriptors.pkl')
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
