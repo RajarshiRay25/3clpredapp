@@ -22,27 +22,44 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 
 # loading the saved models
 # loading the saved models
-try:
-    uploaded_substructure = st.file_uploader("Upload Substructure Model (substructure.pkl)", type=['pkl'])
-    if uploaded_substructure is not None:
-        bioactivity_first_model = pickle.load(uploaded_substructure)
-except ValueError as e:
-    st.error(f'Error loading substructure.pkl: {e}')
-except FileNotFoundError:
-    st.error('substructure.pkl file not found.')
-except Exception as e:
-    st.error(f'Error loading substructure.pkl: {e}')
+# Define the expected dtype for substructure.pkl
+substructure_expected_dtype = {'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
+                               'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
+                               'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
+                               'itemsize': 64}
 
-try:
-    uploaded_descriptors = st.file_uploader("Upload Descriptors Model (descriptors.pkl)", type=['pkl'])
-    if uploaded_descriptors is not None:
-        bioactivity_second_model = pickle.load(uploaded_descriptors)
-except ValueError as e:
-    st.error(f'Error loading descriptors.pkl: {e}')
-except FileNotFoundError:
-    st.error('descriptors.pkl file not found.')
-except Exception as e:
-    st.error(f'Error loading descriptors.pkl: {e}')
+# Define the expected dtype for descriptors.pkl
+descriptors_expected_dtype = {'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity', 'n_node_samples', 'weighted_n_node_samples', 'missing_go_to_left'],
+                              'formats': ['<i8', '<i8', '<i8', '<f8', '<f8', '<i8', '<f8', 'u1'],
+                              'offsets': [0, 8, 16, 24, 32, 40, 48, 56],
+                              'itemsize': 64}
+
+def load_pkl_with_reformat(filename, expected_dtype):
+    with open(filename, 'rb') as f:
+        obj = pickle.load(f)
+        # Check if the dtype of the node array matches the expected dtype
+        if isinstance(obj, np.ndarray) and obj.dtype.names == expected_dtype['names']:
+            return obj.astype(expected_dtype)
+        else:
+            st.warning(f"The dtype of the node array in {filename} does not match the expected dtype.")
+
+# Custom file upload for substructure.pkl
+uploaded_substructure = st.file_uploader("Upload substructure.pkl file", type=['pkl'])
+if uploaded_substructure is not None:
+    try:
+        substructure_data = load_pkl_with_reformat(uploaded_substructure, substructure_expected_dtype)
+        st.success('substructure.pkl file loaded successfully.')
+    except Exception as e:
+        st.error(f'Error loading substructure.pkl file: {e}')
+
+# Custom file upload for descriptors.pkl
+uploaded_descriptors = st.file_uploader("Upload descriptors.pkl file", type=['pkl'])
+if uploaded_descriptors is not None:
+    try:
+        descriptors_data = load_pkl_with_reformat(uploaded_descriptors, descriptors_expected_dtype)
+        st.success('descriptors.pkl file loaded successfully.')
+    except Exception as e:
+        st.error(f'Error loading descriptors.pkl file: {e}')
 
 # Define the tabs
 tab1,tab2,tab3,tab4,tab5,tab6,tab7,tab8 = st.tabs(['Main', 'About', 'What is SARS CoV-2 3CL Protease?', 'Dataset', 'Model performance', 'Python libraries', 'Citing us', 'Application Developers'])
