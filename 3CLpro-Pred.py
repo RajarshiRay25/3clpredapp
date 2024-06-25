@@ -21,8 +21,11 @@ st.info('3CLpro-Pred allows users to predict bioactivity of a query molecule aga
 
 
 # loading the saved models
+# loading the saved models
 try:
-    bioactivity_first_model = pickle.load(open('substructure.pkl', 'rb'))
+    uploaded_substructure = st.file_uploader("Upload Substructure Model (substructure.pkl)", type=['pkl'])
+    if uploaded_substructure is not None:
+        bioactivity_first_model = pickle.load(uploaded_substructure)
 except ValueError as e:
     st.error(f'Error loading substructure.pkl: {e}')
 except FileNotFoundError:
@@ -31,7 +34,9 @@ except Exception as e:
     st.error(f'Error loading substructure.pkl: {e}')
 
 try:
-    bioactivity_second_model = pickle.load(open('descriptors.pkl', 'rb'))
+    uploaded_descriptors = st.file_uploader("Upload Descriptors Model (descriptors.pkl)", type=['pkl'])
+    if uploaded_descriptors is not None:
+        bioactivity_second_model = pickle.load(uploaded_descriptors)
 except ValueError as e:
     st.error(f'Error loading descriptors.pkl: {e}')
 except FileNotFoundError:
