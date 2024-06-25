@@ -62,7 +62,12 @@ def load_pkl_with_reformat(filename):
         obj = pickle.load(f)
         # Check if the dtype of the node array matches the expected dtype
         if isinstance(obj, np.ndarray) and obj.dtype.names == expected_dtype.names:
-            return obj.astype(expected_dtype)
+            if obj.dtype != expected_dtype:
+                # Reformat the dtype if necessary
+                new_obj = obj.astype(expected_dtype)
+                return new_obj
+            else:
+                return obj
         return obj
 
 # Load the pickle files using the custom function
